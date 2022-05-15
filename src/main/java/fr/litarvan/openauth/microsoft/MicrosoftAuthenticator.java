@@ -92,7 +92,7 @@ public class MicrosoftAuthenticator
      *
      * @throws MicrosoftAuthenticationException Thrown if one of the several HTTP requests failed at some point
      */
-    public MicrosoftAuthResult loginWithCredentials(String email, String password) throws MicrosoftAuthenticationException
+    public AuthTokens loginWithCredentials(String email, String password) throws MicrosoftAuthenticationException
     {
         CookieHandler currentHandler = CookieHandler.getDefault();
         CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
@@ -113,17 +113,7 @@ public class MicrosoftAuthenticator
             CookieHandler.setDefault(currentHandler);
         }
 
-        try {
-            return loginWithTokens(extractTokens(result.getURL().toString()));
-        } catch (MicrosoftAuthenticationException e) {
-            if (match("identity/confirm", http.readResponse(result)) != null) {
-                throw new MicrosoftAuthenticationException(
-                        "User has enabled double-authentication or must allow sign-in on https://account.live.com/activity"
-                );
-            }
-
-            throw e;
-        }
+        return extractTokens(result.getURL().toString());
     }
 
     /**
@@ -185,6 +175,25 @@ public class MicrosoftAuthenticator
         );
 
         return loginWithTokens(new AuthTokens(response.getAccessToken() , response.getRefreshToken()));
+    }
+
+    public MicrosoftAuthResult loginWithTokensNoProfile(AuthTokens tokens) throws MicrosoftAuthenticationException {
+        XboxLoginResponse xboxLiveResponse = xboxLiveLogin(tokens.getAccessToken());
+        XboxLoginResponse xstsResponse = xstsLogin(xboxLiveResponse.getToken());
+
+        String userHash = xstsResponse.getDisplayClaims().getUsers()[0].getUserHash();
+        MinecraftLoginResponse minecraftResponse = minecraftLogin(userHash, xstsResponse.getToken());
+        MinecraftStoreResponse storeResponse = http.getJson(
+                MINECRAFT_STORE_ENDPOINT,
+                minecraftResponse.getAccessToken(),
+                MinecraftStoreResponse.class
+        );
+
+        if (Arrays.stream(storeResponse.getItems()).noneMatch(item -> item.getName().equals(MINECRAFT_STORE_IDENTIFIER))) {
+            throw new MicrosoftAuthenticationException("Player didn't buy Minecraft Java Edition or did not migrate its account");
+        }
+
+        return new MicrosoftAuthResult(null, minecraftResponse.getAccessToken(), tokens.getRefreshToken());
     }
 
     /**
