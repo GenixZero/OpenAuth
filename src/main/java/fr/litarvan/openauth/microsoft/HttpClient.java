@@ -36,9 +36,12 @@ public class HttpClient
 
     private final Gson gson;
 
-    public HttpClient()
+    private final Proxy proxy;
+
+    public HttpClient(Proxy proxy)
     {
         this.gson = new Gson();
+        this.proxy = proxy == null ? Proxy.NO_PROXY : proxy;
     }
 
 
@@ -147,7 +150,7 @@ public class HttpClient
     {
         HttpURLConnection connection;
         try {
-            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection = (HttpURLConnection) new URL(url).openConnection(this.proxy);
         } catch (IOException e) {
             throw new MicrosoftAuthenticationException(e);
         }
