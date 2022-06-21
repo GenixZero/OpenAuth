@@ -76,9 +76,14 @@ public class MicrosoftAuthenticator
 
     private final HttpClient http;
 
+    public MicrosoftAuthenticator(Proxy proxy)
+    {
+        this.http = new HttpClient(proxy);
+    }
+
     public MicrosoftAuthenticator()
     {
-        this.http = new HttpClient();
+        this(null);
     }
 
 
