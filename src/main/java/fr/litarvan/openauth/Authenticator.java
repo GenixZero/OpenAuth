@@ -26,6 +26,7 @@ import fr.litarvan.openauth.model.AuthError;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -40,12 +41,7 @@ import java.nio.charset.StandardCharsets;
  * @author Litarvan
  */
 public class Authenticator {
-
-    /**
-     * The Mojang official auth server
-     */
-    public static final String MOJANG_AUTH_URL = "https://authserver.mojang.com/";
-
+    
     /**
      * The auth server URL
      */
@@ -55,6 +51,8 @@ public class Authenticator {
      * The server auth points
      */
     private AuthPoints authPoints;
+
+    private final Proxy proxy;
 
     /**
      * Create an authenticator
@@ -66,8 +64,13 @@ public class Authenticator {
      *            The URIs of the multiple requests
      */
     public Authenticator(String authURL, AuthPoints authPoints) {
+        this(authURL, authPoints, null);
+    }
+
+    public Authenticator(String authURL, AuthPoints authPoints, Proxy proxy) {
         this.authURL = authURL;
         this.authPoints = authPoints;
+        this.proxy = proxy == null ? Proxy.NO_PROXY : proxy;
     }
 
     /**
