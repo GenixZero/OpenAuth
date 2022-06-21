@@ -41,7 +41,7 @@ import java.nio.charset.StandardCharsets;
  * @author Litarvan
  */
 public class Authenticator {
-    
+
     /**
      * The auth server URL
      */
@@ -209,7 +209,7 @@ public class Authenticator {
     private String sendPostRequest(String url, String json) throws AuthenticationException, IOException {
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         URL serverURL = new URL(url);
-        HttpURLConnection connection = (HttpURLConnection) serverURL.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) serverURL.openConnection(this.proxy);
         connection.setRequestMethod("POST");
 
         // Sending post request
